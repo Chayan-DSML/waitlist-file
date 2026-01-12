@@ -28,8 +28,6 @@ import {
 import { initializeApp } from 'firebase/app';
 import {
     getFirestore,
-    collection,
-    addDoc,
     serverTimestamp
 } from 'firebase/firestore';
 import {
@@ -39,12 +37,27 @@ import {
     signInWithCustomToken
 } from 'firebase/auth';
 
+// --- n8n Configuration ---
+// REPLACE THIS WITH YOUR ACTUAL N8N WEBHOOK URL
+const N8N_WEBHOOK_URL = 'https://chayan-agarwal02.app.n8n.cloud/webhook-test/09ae041a-6461-4234-8ffb-fc93d8ab6959';
+
 // --- Firebase Configuration ---
 const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+
+let app, auth, db;
+
+try {
+    if (firebaseConfig.apiKey) {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } else {
+        console.warn("Firebase configuration missing or incomplete. Some features will be disabled.");
+    }
+} catch (error) {
+    console.error("Failed to initialize Firebase:", error);
+}
 
 // --- Updated Logo Component ---
 const Logo = () => {
@@ -156,6 +169,7 @@ export default function App() {
     // Authentication Setup
     useEffect(() => {
         const initAuth = async () => {
+            if (!auth) return;
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -167,8 +181,10 @@ export default function App() {
             }
         };
         initAuth();
-        const unsubscribe = onAuthStateChanged(auth, setUser);
-        return () => unsubscribe();
+        if (auth) {
+            const unsubscribe = onAuthStateChanged(auth, setUser);
+            return () => unsubscribe();
+        }
     }, []);
 
     return (
@@ -376,18 +392,48 @@ export default function App() {
     );
 }
 
+// --- Helper: Submit to Webhook ---
+async function submitToWebhook(data) {
+    if (N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL') {
+        console.warn("n8n Webhook URL is not set. Submitting to console:", data);
+        return; // Simulate success for demo purposes
+    }
+
+    try {
+        const response = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...data,
+                timestamp: new Date().toISOString(),
+                source: 'tourbuk-waitlist'
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Webhook failed: ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error("Submission error:", error);
+        throw error;
+    }
+}
+
 function ContactSection({ user }) {
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [status, setStatus] = useState('idle');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!user || !formData.email) return;
+        if (!formData.email) return;
+
         setStatus('loading');
         try {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), {
-                ...formData,
-                createdAt: serverTimestamp()
+            await submitToWebhook({
+                type: 'contact_message',
+                ...formData
             });
             setStatus('success');
             setFormData({ name: '', email: '', message: '' });
@@ -434,12 +480,13 @@ function WaitlistForm({ user }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!user || !email) return;
+        if (!email) return;
+
         setStatus('loading');
         try {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'waitlist'), {
-                email,
-                createdAt: serverTimestamp()
+            await submitToWebhook({
+                type: 'waitlist_signup',
+                email
             });
             setStatus('success');
         } catch (err) {
