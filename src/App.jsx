@@ -40,11 +40,11 @@ import {
 } from 'firebase/auth';
 
 // --- Firebase Configuration ---
-const firebaseConfig = JSON.parse(__firebase_config);
+const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
 
 // --- Updated Logo Component ---
 const Logo = () => {
@@ -55,7 +55,7 @@ const Logo = () => {
             <div className="relative flex items-center justify-center w-10 h-10 overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-105 bg-white shadow-sm">
                 {!imgError ? (
                     <img
-                        src="file.png"
+                        src="/file.png"
                         alt="Tour Bhook Logo"
                         className="w-full h-full object-contain"
                         onError={() => setImgError(true)}
