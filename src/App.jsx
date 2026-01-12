@@ -457,13 +457,23 @@ function ContactSection({ user }) {
                     <div className="md:w-7/12">
                         <div className="bg-gray-50 rounded-2xl p-8 border border-slate-100">
                             {status === 'success' ? (
-                                <div className="text-center py-12"><h3 className="text-xl font-bold">Message Sent!</h3></div>
+                                <div className="text-center py-12">
+                                    <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
+                                    <p className="text-slate-400">We'll get back to you shortly.</p>
+                                </div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
-                                    <input type="text" placeholder="Name" className="w-full px-4 py-3 rounded-lg border" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                                    <input type="email" placeholder="Email" className="w-full px-4 py-3 rounded-lg border" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                                    <textarea placeholder="Message" rows="4" className="w-full px-4 py-3 rounded-lg border" required value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })}></textarea>
-                                    <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold">Send Message</button>
+                                    {status === 'error' && (
+                                        <div className="bg-red-50 text-red-500 p-4 rounded-xl text-sm border border-red-100">
+                                            Unable to send message. Please try again later.
+                                        </div>
+                                    )}
+                                    <input type="text" placeholder="Name" className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:outline-none" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} disabled={status === 'loading'} />
+                                    <input type="email" placeholder="Email" className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:outline-none" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={status === 'loading'} />
+                                    <textarea placeholder="Message" rows="4" className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-teal-500 focus:outline-none" required value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })} disabled={status === 'loading'}></textarea>
+                                    <button type="submit" className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {status === 'loading' ? 'Sending...' : 'Send Message'}
+                                    </button>
                                 </form>
                             )}
                         </div>
@@ -500,11 +510,35 @@ function WaitlistForm({ user }) {
                 <h2 className="text-3xl font-bold mb-4">Join the Waitlist</h2>
                 <p className="text-slate-500 mb-8">Be the first to experience the future of travel.</p>
                 {status === 'success' ? (
-                    <p className="text-teal-600 font-bold text-xl">You're on the list!</p>
+                    <div className="py-8">
+                        <p className="text-teal-600 font-bold text-xl mb-2">You're on the list!</p>
+                        <p className="text-slate-500">We'll let you know when we launch.</p>
+                    </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto">
-                        <input type="email" placeholder="Email address" className="flex-grow px-6 py-4 rounded-xl bg-gray-50 border" required value={email} onChange={e => setEmail(e.target.value)} />
-                        <button type="submit" className="bg-teal-600 text-white font-bold px-8 py-4 rounded-xl">Join Now</button>
+                    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg mx-auto">
+                        {status === 'error' && (
+                            <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm border border-red-100">
+                                Something went wrong. Please try again.
+                            </div>
+                        )}
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <input
+                                type="email"
+                                placeholder="Email address"
+                                className="flex-grow px-6 py-4 rounded-xl bg-gray-50 border focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                                required
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                disabled={status === 'loading'}
+                            />
+                            <button
+                                type="submit"
+                                className="bg-teal-600 text-white font-bold px-8 py-4 rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                disabled={status === 'loading'}
+                            >
+                                {status === 'loading' ? 'Joining...' : 'Join Now'}
+                            </button>
+                        </div>
                     </form>
                 )}
             </div>
