@@ -1,0 +1,167 @@
+{
+    "name": "Tour Bhook - Form Handler",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "webhook",
+                "options": {}
+            },
+            "id": "webhook-node",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ],
+            "webhookId": "09ae041a-6461-4234-8ffb-fc93d8ab6959"
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.body.type }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "contact_message",
+                            "output": 0
+                        },
+                        {
+                            "value2": "waitlist_signup",
+                            "output": 1
+                        }
+                    ]
+                },
+                "fallbackOutput": 2
+            },
+            "id": "switch-node",
+            "name": "Route by Type",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                320,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "sheetId": "ENTER_YOUR_GOOGLE_SHEET_ID_HERE",
+                "range": "A:D",
+                "options": {}
+            },
+            "id": "google-sheets-contact",
+            "name": "Append to Contact Sheet",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4,
+            "position": [
+                600,
+                200
+            ],
+            "notes": "Connect your Google Account and select the Sheet for Contact messages."
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "sheetId": "ENTER_YOUR_GOOGLE_SHEET_ID_HERE",
+                "range": "A:B",
+                "options": {}
+            },
+            "id": "google-sheets-waitlist",
+            "name": "Append to Waitlist Sheet",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4,
+            "position": [
+                600,
+                400
+            ],
+            "notes": "Connect your Google Account and select the Sheet for Waitlist emails."
+        },
+        {
+            "parameters": {
+                "options": {
+                    "responseHeaders": {
+                        "entries": [
+                            {
+                                "name": "Access-Control-Allow-Origin",
+                                "value": "*"
+                            },
+                            {
+                                "name": "Access-Control-Allow-Methods",
+                                "value": "POST,OPTIONS"
+                            },
+                            {
+                                "name": "Access-Control-Allow-Headers",
+                                "value": "Content-Type"
+                            }
+                        ]
+                    }
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"Data received\"\n}"
+            },
+            "id": "respond-to-webhook",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                900,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Route by Type",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Route by Type": {
+            "main": [
+                [
+                    {
+                        "node": "Append to Contact Sheet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Append to Waitlist Sheet",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Append to Contact Sheet": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Append to Waitlist Sheet": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
