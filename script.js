@@ -2,7 +2,7 @@
 lucide.createIcons();
 
 // Configuration
-const N8N_WEBHOOK_URL = 'https://chayan-agarwal02.app.n8n.cloud/webhook-test/webhook';
+const N8N_WEBHOOK_URL = 'https://chayan-agarwal02.app.n8n.cloud/webhook/webhook';
 
 // Navigation Logic
 function navigateTo(pageId, sectionId = null) {
